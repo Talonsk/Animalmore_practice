@@ -5,126 +5,140 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import React, { useCallback, useEffect } from 'react';
+import { Animated, Easing, SafeAreaView, StyleSheet, Text, useAnimatedValue, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const leftAnim = useAnimatedValue(200);
+  const rightAnim = useAnimatedValue(200);
+  const textAnim = useAnimatedValue(400);
+  const gradientAnim = useAnimatedValue(0);
 
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the reccomendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+  const logoEntrance = useCallback(() => {
 
-  return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
+    Animated.parallel([
+      Animated.timing(leftAnim, {
+        toValue: -5,
+        duration: 1000,
+        useNativeDriver: false,
+      }),
+      Animated.timing(rightAnim, {
+        toValue: -60,
+        duration: 1000,
+        useNativeDriver: false,
+      }),
+      Animated.timing(textAnim, {
+        toValue: 0,
+        duration: 1000,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [leftAnim, rightAnim, textAnim]);
+
+  const gradientScroll = useCallback(() => {
+    Animated.loop(
+        Animated.timing(gradientAnim, {
+          toValue: 1125,
+          duration: 25000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }), {iterations: 5000}
+    ).start();
+  }, [gradientAnim]);
+
+
+  useEffect(() => {
+    logoEntrance();
+    gradientScroll();
+  }, [logoEntrance, gradientScroll]);
+
+  console.log(textAnim);
+
+  return(
+    <SafeAreaView style={styles.main_container}>
+      <Animated.View
+        style={[
+          styles.gradient,
+          {transform: [{translateY: gradientAnim}]},
+        ]}
+      >
+        <LinearGradient
+          colors={['#E73D59', '#FFA033', '#FFDB0C', '#BAD015', '#17C3B8']}
+          style={
+            [styles.gradient, {transform: [{translateY: 0}]}]
+          }
+        />
+        <LinearGradient
+          colors={['#E73D59', '#FFA033', '#FFDB0C', '#BAD015', '#17C3B8', '#E73D59']}
+          style={[styles.gradient, {top: -225, transform: [{translateY: -910}]}]}
+        />
+      </Animated.View>
+
+      <View style={styles.container}>
+        <View style={styles.logo}>
+          <Animated.Image
+            source={require('./images/symb-dog.png')}
+            style={[styles.logo_image, {right: rightAnim}]}
+          />
+          <Animated.Image
+            source={require('./images/symb-cat.png')}
+            style={[styles.logo_image, {left: leftAnim}]}
+          />
         </View>
-        <View
+        <Animated.View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
+            transform: [{translateY: textAnim}],
+        }}
+        >
+          <Text style={styles.header}>
+            animalmore
+          </Text>
+          <Text style={styles.description}>сервисы для ваших питомцев</Text>
+        </Animated.View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  main_container:{
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  gradient:{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  container:{
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    margin: 15,
+    marginTop: 40,
   },
-  highlight: {
-    fontWeight: '700',
+  header:{
+    fontSize: 50,
+    fontFamily: 'Nunito-ExtraBold',
+    color: '#343434',
+  },
+  description:{
+    fontSize: 20,
+    fontFamily: 'Nunito-Regular',
+    color: '#343434',
+  },
+  logo:{
+    position: 'relative',
+    flexDirection: 'row',
+    height: 250,
+  },
+  logo_image:{
+    position: 'absolute',
   },
 });
 
